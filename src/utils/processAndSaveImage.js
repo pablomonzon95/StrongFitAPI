@@ -1,13 +1,21 @@
+
+
 const sharp = require("sharp");
-const uuid = require("uuid");
-const path = require("path");
+const uuid = require ("uuid");
+const path = require("path") ;
+
+
+
 const fs = require("fs").promises;
 
+
+
 // i Generate the path where i want to store images/videos"
-const uploadsPath = path.join(__dirname, "../../docs", process.env.UPLOADS_DIR);
+const uploadsPath = path.join(__dirname, "../../docs", process.env.UPLOADS_DIR ?? "");
 
 // Function that process binary data and save the image
 const processAndSaveImage = async (imageBuffer) => {
+
   // Creating the uploads directory if not exist
   await fs.mkdir(uploadsPath, { recursive: true });
 
@@ -18,7 +26,7 @@ const processAndSaveImage = async (imageBuffer) => {
   const imageMetadata = await image.metadata();
 
   // Resizing the image to less than 1000px 
-  if (imageMetadata.width > 1000) {
+  if ( imageMetadata.width && imageMetadata.width > 1000) {
     image.resize(1000);
   }
 

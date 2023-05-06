@@ -1,21 +1,37 @@
-//Función in charge of sending a mail with the activation link in it.
+const sharp = require("sharp");
+const uuid = require("uuid");
+const path = require("path");
+const fs = require("fs").promises;
 
-const { MAILJET_PUBLIC_KEY, MAILJET_SECRET_KEY, SENDER_EMAIL, SENDER_NAME } =
-  process.env;
+// i Generate the path where i want to store images/videos"
+const uploadsPath = path.join(__dirname, "../../docs", process.env.UPLOADS_DIR);
 
-const mailjet = require("node-mailjet").connect(
-  MAILJET_PUBLIC_KEY,
-  MAILJET_SECRET_KEY
-);
+// Function that process binary data and save the image
+const processAndSaveImage = async (imageBuffer) => {
+  // Creating the uploads directory if not exist
+  await fs.mkdir(uploadsPath, { recursive: true });
 
-const sendMail = async (subject, content, recipient) => {
-  await mailjet.post("send").request({
-    FromEmail: SENDER_EMAIL,
-    FromName: SENDER_NAME,
-    Subject: subject,
-    "Html-part": content,
-    Recipients: [{ Email: recipient }],
-  });
+  // Processing the image with sharp
+  const image = sharp(imageBuffer)
+
+  // Obtaining the image metadata (witdh, height, format, etc)
+  const imageMetadata = await image.metadata();
+
+  // Resizing the image to less than 1000px 
+  if (imageMetadata.width > 1000) {
+    image.resize(1000);
+  }
+
+  // Generating a random and unique name for the image with the module uuid.
+  const imageName = `${uuid.v4()}.${imageMetadata.format}`;
+
+  // Generating the path where we are going to store the media 
+  const imagePath = path.join(uploadsPath, imageName);
+
+  await image.toFile(imagePath);
+
+  // Returning image Name
+  return imageName;
 };
 
-module.exports = sendMail;
+module.exports = processAndSaveImage;
